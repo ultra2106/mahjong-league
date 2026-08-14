@@ -1,0 +1,243 @@
+:root {
+  --bg-dark: #12182b;
+  --text-main: #1a1a1a;
+  --text-muted: #8a93b8;
+  --text-secondary: #666;
+  --border: #e1e0d9;
+  --surface-1: #f7f6f2;
+  --surface-2: #ffffff;
+  --success: #2f9e44;
+  --danger: #e03131;
+  --radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  margin: 0;
+  padding: 1.5rem;
+  max-width: 900px;
+  margin-inline: auto;
+  color: var(--text-main);
+  background: #fafaf8;
+  line-height: 1.6;
+}
+
+/* ===== ヒーローセクション ===== */
+.hero {
+  background: var(--bg-dark);
+  border-radius: 12px;
+  padding: 1.75rem 1.5rem;
+  color: #fff;
+  margin-bottom: 1.5rem;
+}
+
+.hero p.label {
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0 0 6px;
+}
+
+.hero h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ===== タブ ===== */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.tabs button {
+  flex: 1;
+  padding: 12px 4px;
+  font-size: 14px;
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tabs button:hover {
+  color: var(--text-main);
+}
+
+.tabs button.active {
+  border-bottom-color: var(--bg-dark);
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* ===== カード・テーブル ===== */
+.card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 420px;
+}
+
+thead tr {
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+}
+
+th, td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  white-space: nowrap;
+}
+
+th:first-child, td:first-child {
+  text-align: left;
+}
+
+tbody tr:hover {
+  background: var(--surface-1);
+}
+
+.pt-plus { color: var(--success); font-weight: 600; }
+.pt-minus { color: var(--danger); font-weight: 600; }
+
+/* ===== フォーム ===== */
+h1 {
+  font-size: 20px;
+  margin-bottom: 0.5rem;
+}
+
+h2 {
+  font-size: 16px;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+form {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  margin-top: 10px;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  background: var(--surface-1);
+}
+
+button.primary {
+  background: var(--bg-dark);
+  color: #fff;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 12px;
+  width: 100%;
+}
+
+button.primary:hover {
+  opacity: 0.9;
+}
+
+/* ===== ナビリンク ===== */
+.nav-links {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.nav-links a {
+  color: var(--text-main);
+  text-decoration: none;
+  margin-right: 12px;
+}
+
+.nav-links a:hover {
+  text-decoration: underline;
+}
+
+/* ===== 試合日程カード ===== */
+.day-section {
+  margin-bottom: 1.5rem;
+}
+
+.day-section h2 {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.match-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.match-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.1rem;
+}
+
+.match-card .round-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+
+.match-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.match-row .rank {
+  width: 16px;
+  color: var(--text-muted);
+}
+
+.match-row .name {
+  flex: 1;
+}
+
+.match-row .team-tag {
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-left: 6px;
+}
