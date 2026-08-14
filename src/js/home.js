@@ -1,4 +1,5 @@
 let activeTab = 'individual';
+let activeTeamFilter = -1; // -1 = すべて
 
 async function init() {
   const config = await fetch('config/league.config.json').then(r => r.json());
@@ -31,40 +32,80 @@ function fmtPt(pt) {
 
 async function render() {
   const content = document.getElementById('content');
-  content.textContent = '読み込み中...';
+  content.innerHTML = '読み込み中...';
 
   const standings = await getStandings();
 
   if (activeTab === 'individual') {
-    let html = '<div class="card"><table><thead><tr><th>選手名</th><th>試合数</th><th>ポイント</th><th>平均順位</th><th>トップ率</th></tr></thead><tbody>';
-    standings.players
-      .sort((a, b) => b.pt - a.pt)
-      .forEach(p => {
-        html += `<tr>
-          <td>${p.name}</td>
-          <td>${p.games}</td>
-          <td>${fmtPt(p.pt)}</td>
-          <td>${p.avgRank.toFixed(2)}</td>
-          <td>${(p.topRate * 100).toFixed(0)}%</td>
-        </tr>`;
-      });
-    html += '</tbody></table></div>';
-    content.innerHTML = html;
+    renderIndividual(standings, content);
   } else {
-    let html = '<div class="card"><table><thead><tr><th>#</th><th>チーム</th><th>合計pt</th><th>人数</th></tr></thead><tbody>';
-    standings.teams
-      .sort((a, b) => b.total - a.total)
-      .forEach((t, i) => {
-        html += `<tr>
-          <td>${i + 1}</td>
-          <td>${t.name}</td>
-          <td>${fmtPt(t.total)}</td>
-          <td>${t.members.length}人</td>
-        </tr>`;
-      });
-    html += '</tbody></table></div>';
-    content.innerHTML = html;
+    renderTeam(standings, content);
   }
+}
+
+function renderIndividual(standings, content) {
+  const teams = standings.teams;
+
+  let filterHtml = '<div class="team-filter">';
+  filterHtml += `<button data-idx="-1" class="${activeTeamFilter === -1 ? 'active' : ''}">すべて</button>`;
+  teams.forEach((t, i) => {
+    filterHtml += `<button data-idx="${i}" class="${activeTeamFilter === i ? 'active' : ''}">
+      <span class="team-dot"></span>${t.name}
+    </button>`;
+  });
+  filterHtml += '</div>';
+
+  const targetTeams = activeTeamFilter === -1 ? teams : [teams[activeTeamFilter]];
+
+  let sectionsHtml = '';
+  targetTeams.forEach(team => {
+    if (team.members.length === 0) return;
+
+    sectionsHtml += `<div class="team-section">
+      <h2><span class="team-dot"></span>${team.name}</h2>
+      <div class="sticky-table-wrap">
+        <table class="sticky-table">
+          <thead><tr><th>選手名</th>${team.members.map(p => `<th>${p.name}</th>`).join('')}</tr></thead>
+          <tbody>
+            <tr><th>試合数</th>${team.members.map(p => `<td>${p.games}</td>`).join('')}</tr>
+            <tr><th>ポイント</th>${team.members.map(p => `<td>${fmtPt(p.pt)}</td>`).join('')}</tr>
+            <tr><th>平均順位</th>${team.members.map(p => `<td>${p.avgRank.toFixed(2)}</td>`).join('')}</tr>
+            <tr><th>トップ率</th>${team.members.map(p => `<td>${(p.topRate * 100).toFixed(0)}%</td>`).join('')}</tr>
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  });
+
+  if (sectionsHtml === '') {
+    sectionsHtml = '<p style="color:var(--text-muted);">まだ選手が登録されていません。チーム管理ページから登録してください。</p>';
+  }
+
+  content.innerHTML = filterHtml + sectionsHtml;
+
+  content.querySelectorAll('.team-filter button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTeamFilter = Number(btn.dataset.idx);
+      render();
+    });
+  });
+}
+
+function renderTeam(standings, content) {
+  const ranked = [...standings.teams].sort((a, b) => b.total - a.total);
+
+  let html = '<div class="card"><table class="standings-table"><thead><tr><th>#</th><th>チーム</th><th>合計pt</th><th>人数</th></tr></thead><tbody>';
+  ranked.forEach((t, i) => {
+    html += `<tr>
+      <td>${i + 1}</td>
+      <td class="team-name-cell"><span class="team-dot"></span>${t.name}</td>
+      <td>${fmtPt(t.total)}</td>
+      <td>${t.members.length}人</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+
+  content.innerHTML = html;
 }
 
 init();
