@@ -241,3 +241,102 @@ button.primary:hover {
   font-size: 11px;
   margin-left: 6px;
 }
+/* ===== チームフィルター（追加分） ===== */
+.team-filter {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.team-filter button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.team-filter button.active {
+  border: 2px solid var(--bg-dark);
+  font-weight: 600;
+}
+
+.team-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ===== チームごとの成績カード（追加分） ===== */
+.team-section {
+  margin-bottom: 1.5rem;
+}
+
+.team-section h2 {
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.team-section .team-dot {
+  width: 24px;
+  height: 24px;
+}
+
+/* ===== 選手名を左に固定する横スクロール表 ===== */
+.sticky-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.sticky-table {
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 100%;
+}
+
+.sticky-table th, .sticky-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.sticky-table th:first-child, .sticky-table td:first-child {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background: var(--surface-2);
+  z-index: 1;
+}
+
+.sticky-table thead th {
+  background: var(--surface-1);
+  font-weight: 600;
+}
+
+.sticky-table thead th:first-child {
+  background: var(--surface-1);
+}
+
+/* ===== チーム順位表（追加分） ===== */
+.standings-table td.team-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
