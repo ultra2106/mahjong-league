@@ -1,5 +1,5 @@
 // 🔧STEP3でコピーしたURLに書き換えてください
-const GAS_API_URL = 'https://script.google.com/macros/s/XXXXXXXXXXXX/exec';
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbx0R1xqIlYl9_lGQ4Drcs3Bj3Qdn_AIBgctJa_9zpmqf2P5a6QijxniH9WCn_UKLV8s/exec';
 
 // 🔧GASのスクリプトプロパティに設定したADMIN_SECRETと同じ値にしてください
 const ADMIN_SECRET = 'mahjong2026';
