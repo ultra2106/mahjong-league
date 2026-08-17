@@ -6,29 +6,44 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <h1>チーム管理</h1>
-  <p><a href="index.html">← ホームに戻る</a></p>
+  <div class="top-nav">
+    <p>IN-HOUSE MAHJONG LEAGUE</p>
+  </div>
 
-  <h2>登録済みチーム</h2>
-  <div id="team-list"></div>
+  <div class="page-wrap">
+    <h1>チーム管理</h1>
+    <p class="nav-links"><a href="index.html">← ホームに戻る</a></p>
 
-  <h2>新規チーム作成</h2>
-  <form id="team-form">
-    <label>チーム名</label>
-    <input type="text" id="team-name" required>
-    <label>カラー（例: coral / blue / amber）</label>
-    <input type="text" id="team-color">
-    <button type="submit" class="primary">チームを作成</button>
-  </form>
+    <h2>登録済みチーム</h2>
+    <div id="team-list"></div>
 
-  <h2>メンバー追加</h2>
-  <form id="player-form">
-    <label>氏名</label>
-    <input type="text" id="player-name" required>
-    <label>所属チーム</label>
-    <select id="player-team"></select>
-    <button type="submit" class="primary">メンバーを追加</button>
-  </form>
+    <h2>新規チーム作成</h2>
+    <form id="team-form">
+      <label>チーム名</label>
+      <input type="text" id="team-name" required>
+
+      <label>カラー（例: #2f9e44 のようなカラーコード推奨）</label>
+      <input type="text" id="team-color" placeholder="#2f9e44">
+
+      <label>アイコン：絵文字を入力するか、下から画像を選んでください</label>
+      <input type="text" id="team-icon" placeholder="🐉" maxlength="4">
+
+      <label>チーム画像（任意・選ぶと絵文字より優先されます）</label>
+      <input type="file" id="team-icon-file" accept="image/*">
+      <div id="icon-preview" style="margin: 8px 0;"></div>
+
+      <button type="submit" class="primary">チームを作成</button>
+    </form>
+
+    <h2>メンバー追加</h2>
+    <form id="player-form">
+      <label>氏名</label>
+      <input type="text" id="player-name" required>
+      <label>所属チーム</label>
+      <select id="player-team"></select>
+      <button type="submit" class="primary">メンバーを追加</button>
+    </form>
+  </div>
 
   <script src="js/api.js"></script>
   <script src="js/admin.js"></script>
