@@ -1,15 +1,19 @@
 let players = [];
 let teams = [];
 let config = null;
-let selectedPlayers = []; // 対局者4人（player情報）
-let scores = [];          // 現在の素点（seat順）
-let hands = [];           // 記録済みの局一覧
-let dealerSeat = 0;       // 現在の親のseat番号
+let selectedPlayers = [];
+let scores = [];
+let hands = [];
+let dealerSeat = 0;
+let editingGameId = null; // URLに?edit=idがあれば編集モード
 
 async function init() {
   players = await getPlayers();
   teams = await getTeams();
   config = await fetch('config/league.config.json').then(r => r.json());
+
+  const params = new URLSearchParams(window.location.search);
+  editingGameId = params.get('edit');
 
   renderPlayerSelectRows();
 
@@ -20,13 +24,74 @@ async function init() {
 
   document.getElementById('tsumo-winner').addEventListener('change', updateTsumoFieldVisibility);
   document.getElementById('tsumo-child-amount').addEventListener('input', autoFillParentAmount);
+
+  if (editingGameId) {
+    document.querySelector('h1').textContent = '対局結果の編集';
+    document.getElementById('finish-btn').textContent = 'この内容で更新する';
+    await loadGameForEdit(editingGameId);
+  }
+}
+
+async function loadGameForEdit(id) {
+  const detail = await getGameDetail(id);
+  if (!detail.game) {
+    alert('対局データが見つかりませんでした');
+    return;
+  }
+  const g = detail.game;
+
+  document.getElementById('date').value = g.date;
+  document.getElementById('round_no').value = g.round_no;
+
+  const playerIds = [g.player1_id, g.player2_id, g.player3_id, g.player4_id];
+  selectedPlayers = playerIds.map((pid, seat) => {
+    const p = players.find(pl => pl.id === pid);
+    return { seat, id: pid, name: p ? p.name : '不明' };
+  });
+
+  const seatOf = (pid) => selectedPlayers.findIndex(p => p.id === pid);
+
+  // 局データを座席ベースで再構築
+  const sortedHands = [...detail.hands].sort((a, b) => Number(a.hand_no) - Number(b.hand_no));
+  hands = sortedHands.map(h => {
+    const handPayments = detail.payments
+      .filter(p => Number(p.hand_no) === Number(h.hand_no))
+      .map(p => ({
+        from: seatOf(p.from_player_id),
+        to: seatOf(p.to_player_id),
+        amount: Number(p.amount)
+      }));
+    return {
+      type: h.type,
+      dealerSeat: seatOf(h.dealer_player_id),
+      payments: handPayments
+    };
+  });
+
+  // 素点を最初から再計算（開始点からリプレイ）
+  scores = selectedPlayers.map(() => config.startScore);
+  hands.forEach(h => {
+    h.payments.forEach(p => {
+      scores[p.from] -= p.amount;
+      scores[p.to] += p.amount;
+    });
+  });
+  dealerSeat = hands.length > 0 ? hands[hands.length - 1].dealerSeat : 0;
+
+  renderScoreBoard();
+  renderPlayerOptionsInHandForm();
+  renderDealerSelect();
+  renderHandList();
+  updateTsumoFieldVisibility();
+
+  document.getElementById('hand-section').style.display = 'block';
+  document.getElementById('setup-form').style.display = 'none';
 }
 
 function renderPlayerSelectRows() {
   const wrap = document.getElementById('player-select-rows');
   wrap.innerHTML = '';
 
-  // チームごとにグループ化したoptionを作る
   const optionsHtml = teams.map(team => {
     const members = players.filter(p => p.team_id === team.id);
     if (members.length === 0) return '';
@@ -34,7 +99,6 @@ function renderPlayerSelectRows() {
     return `<optgroup label="${team.name}">${opts}</optgroup>`;
   }).join('');
 
-  // どのチームにも属していない選手用
   const unassigned = players.filter(p => !teams.some(t => t.id === p.team_id));
   const unassignedHtml = unassigned.length > 0
     ? `<optgroup label="未所属">${unassigned.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}</optgroup>`
@@ -102,7 +166,6 @@ function toggleHandFields() {
 function updateTsumoFieldVisibility() {
   const winnerSeat = Number(document.getElementById('tsumo-winner').value || 0);
   const isDealerWin = winnerSeat === dealerSeat;
-
   document.getElementById('tsumo-dealer-win').style.display = isDealerWin ? 'block' : 'none';
   document.getElementById('tsumo-child-win').style.display = isDealerWin ? 'none' : 'block';
 }
@@ -252,19 +315,9 @@ function calcFinalResults() {
   });
 }
 
-async function finishSession() {
-  if (hands.length === 0) {
-    alert('少なくとも1局は記録してください');
-    return;
-  }
-
+function buildGameData() {
   const date = document.getElementById('date').value;
   const round_no = document.getElementById('round_no').value;
-
-  if (!date) {
-    alert('対局日を入力してください');
-    return;
-  }
 
   const results = calcFinalResults();
   const gamePlayers = results.map(r => ({
@@ -274,10 +327,17 @@ async function finishSession() {
     point: r.point
   }));
 
-  const payments = [];
-  hands.forEach(h => {
+  const handsPayload = hands.map((h, idx) => ({
+    hand_no: idx,
+    dealer_player_id: selectedPlayers[h.dealerSeat].id,
+    type: h.type
+  }));
+
+  const paymentsPayload = [];
+  hands.forEach((h, idx) => {
     h.payments.forEach(p => {
-      payments.push({
+      paymentsPayload.push({
+        hand_no: idx,
         from: selectedPlayers[p.from].id,
         to: selectedPlayers[p.to].id,
         amount: p.amount
@@ -285,11 +345,31 @@ async function finishSession() {
     });
   });
 
-  const gameData = { date, round_no, players: gamePlayers, payments };
+  return { date, round_no, players: gamePlayers, hands: handsPayload, payments: paymentsPayload };
+}
 
-  const result = await submitGame(gameData);
+async function finishSession() {
+  if (hands.length === 0) {
+    alert('少なくとも1局は記録してください');
+    return;
+  }
+  if (!document.getElementById('date').value) {
+    alert('対局日を入力してください');
+    return;
+  }
+
+  const gameData = buildGameData();
+  let result;
+
+  if (editingGameId) {
+    gameData.id = editingGameId;
+    result = await updateGame(gameData);
+  } else {
+    result = await submitGame(gameData);
+  }
+
   document.getElementById('result-message').textContent =
-    result.status === 'ok' ? '登録しました！' : '登録に失敗しました: ' + result.error;
+    result.status === 'ok' ? '保存しました！' : '保存に失敗しました: ' + result.error;
 }
 
 init();
