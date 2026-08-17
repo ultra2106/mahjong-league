@@ -1,5 +1,5 @@
 let activeTab = 'individual';
-let activeTeamFilter = -1; // -1 = すべて
+let activeTeamFilter = -1;
 
 async function init() {
   const config = await fetch('config/league.config.json').then(r => r.json());
@@ -31,9 +31,16 @@ function fmtPt(pt) {
   return `<span class="${cls}">${text}</span>`;
 }
 
-// シンボル用のチームカラー。color列が空でも崩れないようフォールバック
 function teamColor(team) {
   return team.color && team.color.trim() !== '' ? team.color : '#2f9e44';
+}
+
+function teamIconHtml(team) {
+  const icon = team.icon || '';
+  if (icon.startsWith('data:image') || icon.startsWith('http')) {
+    return `<img src="${icon}" alt="">`;
+  }
+  return icon.trim() !== '' ? icon : '🀄';
 }
 
 async function render() {
@@ -56,7 +63,7 @@ function renderIndividual(standings, content) {
   filterHtml += `<button data-idx="-1" class="${activeTeamFilter === -1 ? 'active' : ''}">すべて</button>`;
   teams.forEach((t, i) => {
     filterHtml += `<button data-idx="${i}" class="${activeTeamFilter === i ? 'active' : ''}">
-      <span class="team-dot" style="background:${teamColor(t)};"></span>${t.name}
+      <span class="team-dot" style="background:${teamColor(t)};">${teamIconHtml(t)}</span>${t.name}
     </button>`;
   });
   filterHtml += '</div>';
@@ -68,7 +75,7 @@ function renderIndividual(standings, content) {
     if (team.members.length === 0) return;
 
     sectionsHtml += `<div class="team-section">
-      <h2><span class="team-dot" style="background:${teamColor(team)};"></span>${team.name}</h2>
+      <h2><span class="team-dot" style="background:${teamColor(team)};">${teamIconHtml(team)}</span>${team.name}</h2>
       <div class="sticky-table-wrap">
         <table class="sticky-table">
           <thead><tr><th>選手名</th>${team.members.map(p => `<th>${p.name}</th>`).join('')}</tr></thead>
@@ -104,7 +111,7 @@ function renderTeam(standings, content) {
   ranked.forEach((t, i) => {
     html += `<tr>
       <td>${i + 1}</td>
-      <td class="team-name-cell"><span class="team-dot" style="background:${teamColor(t)};"></span>${t.name}</td>
+      <td class="team-name-cell"><span class="team-dot" style="background:${teamColor(t)};">${teamIconHtml(t)}</span>${t.name}</td>
       <td>${fmtPt(t.total)}</td>
       <td>${t.members.length}人</td>
     </tr>`;
