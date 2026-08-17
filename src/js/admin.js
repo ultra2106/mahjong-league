@@ -195,7 +195,6 @@ async function renderGameList() {
     return;
   }
 
-  // 新しい日付順に表示
   const sorted = [...games].reverse();
 
   wrap.innerHTML = sorted.map(g => {
@@ -209,7 +208,10 @@ async function renderGameList() {
         <p style="font-size:12px; color:var(--text-muted); margin:0 0 4px;">${g.date}　第${g.round_no}回戦</p>
         <p style="margin:0; font-size:13px;">${summary}</p>
       </div>
-      <button type="button" class="delete-game-btn" data-id="${g.id}">削除</button>
+      <div style="display:flex; gap:8px; flex-shrink:0;">
+        <a href="input.html?edit=${g.id}"><button type="button">編集</button></a>
+        <button type="button" class="delete-game-btn" data-id="${g.id}">削除</button>
+      </div>
     </div>`;
   }).join('');
 
