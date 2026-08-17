@@ -17,7 +17,7 @@
     <h2>登録済みチーム</h2>
     <div id="team-list"></div>
 
-    <h2>新規チーム作成</h2>
+    <h2 id="team-form-title">新規チーム作成</h2>
     <form id="team-form">
       <label>チーム名</label>
       <input type="text" id="team-name" required>
@@ -32,7 +32,8 @@
       <input type="file" id="team-icon-file" accept="image/*">
       <div id="icon-preview" style="margin: 8px 0;"></div>
 
-      <button type="submit" class="primary">チームを作成</button>
+      <button type="submit" class="primary" id="team-submit-btn">チームを作成</button>
+      <button type="button" id="team-cancel-btn" style="display:none; margin-top:8px; width:100%;">編集をキャンセル</button>
     </form>
 
     <h2>メンバー追加</h2>
@@ -43,6 +44,9 @@
       <select id="player-team"></select>
       <button type="submit" class="primary">メンバーを追加</button>
     </form>
+
+    <h2>対局結果の管理</h2>
+    <div id="game-list"></div>
   </div>
 
   <script src="js/api.js"></script>
