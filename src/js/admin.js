@@ -20,6 +20,14 @@ async function renderTeamList() {
 async function renderTeamOptions() {
   const teams = await getTeams();
   const select = document.getElementById('player-team');
+
+  if (teams.length === 0) {
+    select.innerHTML = '<option value="">先にチームを作成してください</option>';
+    select.disabled = true;
+    return;
+  }
+
+  select.disabled = false;
   select.innerHTML = teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
 }
 
@@ -37,6 +45,12 @@ async function handlePlayerSubmit(e) {
   e.preventDefault();
   const name = document.getElementById('player-name').value;
   const team_id = document.getElementById('player-team').value;
+
+  if (!team_id) {
+    alert('先にチームを作成し、所属チームを選択してください');
+    return;
+  }
+
   await submitPlayer({ name, team_id });
   document.getElementById('player-name').value = '';
   await renderTeamList();
