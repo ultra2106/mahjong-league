@@ -1,9 +1,63 @@
+let pendingIconDataUrl = ''; // 選択された画像（リサイズ後のデータ）
+
 async function init() {
   await renderTeamList();
   await renderTeamOptions();
 
   document.getElementById('team-form').addEventListener('submit', handleTeamSubmit);
   document.getElementById('player-form').addEventListener('submit', handlePlayerSubmit);
+  document.getElementById('team-icon-file').addEventListener('change', handleIconFileChange);
+}
+
+function isImageIcon(icon) {
+  return icon && (icon.startsWith('data:image') || icon.startsWith('http'));
+}
+
+function renderIconHtml(team) {
+  if (isImageIcon(team.icon)) {
+    return `<img src="${team.icon}" alt="">`;
+  }
+  return teamIconText(team);
+}
+
+function teamIconText(team) {
+  return team.icon && team.icon.trim() !== '' ? team.icon : '🀄';
+}
+
+function teamColor(team) {
+  return team.color && team.color.trim() !== '' ? team.color : '#2f9e44';
+}
+
+function handleIconFileChange(e) {
+  const file = e.target.files[0];
+  if (!file) {
+    pendingIconDataUrl = '';
+    document.getElementById('icon-preview').innerHTML = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const img = new Image();
+    img.onload = () => {
+      const size = 64;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      const minSide = Math.min(img.width, img.height);
+      const sx = (img.width - minSide) / 2;
+      const sy = (img.height - minSide) / 2;
+      ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+
+      pendingIconDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      document.getElementById('icon-preview').innerHTML =
+        `<img src="${pendingIconDataUrl}" style="width:48px; height:48px; border-radius:50%; object-fit:cover;">`;
+    };
+    img.src = event.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 async function renderTeamList() {
@@ -13,7 +67,10 @@ async function renderTeamList() {
 
   wrap.innerHTML = teams.map(t => {
     const members = players.filter(p => p.team_id === t.id);
-    return `<p><strong>${t.name}</strong>（${members.length}人）: ${members.map(m => m.name).join(', ')}</p>`;
+    return `<p>
+      <span class="team-dot" style="background:${teamColor(t)};">${renderIconHtml(t)}</span>
+      <strong>${t.name}</strong>（${members.length}人）: ${members.map(m => m.name).join(', ')}
+    </p>`;
   }).join('');
 }
 
@@ -35,8 +92,19 @@ async function handleTeamSubmit(e) {
   e.preventDefault();
   const name = document.getElementById('team-name').value;
   const color = document.getElementById('team-color').value;
-  await submitTeam({ name, color });
+  const emojiIcon = document.getElementById('team-icon').value;
+
+  const icon = pendingIconDataUrl || emojiIcon;
+
+  await submitTeam({ name, color, icon });
+
   document.getElementById('team-name').value = '';
+  document.getElementById('team-color').value = '';
+  document.getElementById('team-icon').value = '';
+  document.getElementById('team-icon-file').value = '';
+  document.getElementById('icon-preview').innerHTML = '';
+  pendingIconDataUrl = '';
+
   await renderTeamList();
   await renderTeamOptions();
 }
