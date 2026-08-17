@@ -1,14 +1,14 @@
 let players = [];
+let teams = [];
 let config = null;
 let selectedPlayers = []; // 対局者4人（player情報）
 let scores = [];          // 現在の素点（seat順）
 let hands = [];           // 記録済みの局一覧
 let dealerSeat = 0;       // 現在の親のseat番号
 
-// init()関数を以下に差し替え
 async function init() {
   players = await getPlayers();
-  teams = await getTeams(); // ← 追加
+  teams = await getTeams();
   config = await fetch('config/league.config.json').then(r => r.json());
 
   renderPlayerSelectRows();
@@ -22,7 +22,6 @@ async function init() {
   document.getElementById('tsumo-child-amount').addEventListener('input', autoFillParentAmount);
 }
 
-// renderPlayerSelectRows()関数を以下に差し替え
 function renderPlayerSelectRows() {
   const wrap = document.getElementById('player-select-rows');
   wrap.innerHTML = '';
@@ -31,9 +30,8 @@ function renderPlayerSelectRows() {
   const optionsHtml = teams.map(team => {
     const members = players.filter(p => p.team_id === team.id);
     if (members.length === 0) return '';
-    const label = team.name;
     const opts = members.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-    return `<optgroup label="${label}">${opts}</optgroup>`;
+    return `<optgroup label="${team.name}">${opts}</optgroup>`;
   }).join('');
 
   // どのチームにも属していない選手用
@@ -54,21 +52,6 @@ function renderPlayerSelectRows() {
   }
 }
 
-function renderPlayerSelectRows() {
-  const wrap = document.getElementById('player-select-rows');
-  wrap.innerHTML = '';
-  for (let i = 0; i < 4; i++) {
-    const div = document.createElement('div');
-    div.innerHTML = `
-      <label>対局者${i + 1}</label>
-      <select data-seat="${i}" class="setup-player-select">
-        ${players.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
-      </select>
-    `;
-    wrap.appendChild(div);
-  }
-}
-
 function handleSetup(e) {
   e.preventDefault();
 
@@ -80,7 +63,7 @@ function handleSetup(e) {
 
   scores = selectedPlayers.map(() => config.startScore);
   hands = [];
-  dealerSeat = 0; // 東1局は対局者1が親という前提。必要ならここを変更してください
+  dealerSeat = 0;
 
   renderScoreBoard();
   renderPlayerOptionsInHandForm();
@@ -116,7 +99,6 @@ function toggleHandFields() {
   if (type === 'tsumo') updateTsumoFieldVisibility();
 }
 
-// 和了者が親か子かで、ツモの入力欄を出し分ける
 function updateTsumoFieldVisibility() {
   const winnerSeat = Number(document.getElementById('tsumo-winner').value || 0);
   const isDealerWin = winnerSeat === dealerSeat;
@@ -125,7 +107,6 @@ function updateTsumoFieldVisibility() {
   document.getElementById('tsumo-child-win').style.display = isDealerWin ? 'none' : 'block';
 }
 
-// 子の支払いを入力したら、親の支払い欄に自動で2倍を入れる（手動修正も可能）
 function autoFillParentAmount() {
   const childAmount = parseFloat(document.getElementById('tsumo-child-amount').value || 0);
   document.getElementById('tsumo-parent-amount').value = childAmount * 2;
@@ -133,7 +114,7 @@ function autoFillParentAmount() {
 
 function addHand() {
   const type = document.getElementById('hand-type').value;
-  let payments = []; // [{from: seat, to: seat, amount}]
+  let payments = [];
 
   if (type === 'ron') {
     const loser = Number(document.getElementById('ron-loser').value);
