@@ -78,12 +78,14 @@ function renderIndividual(standings, content) {
       <h2><span class="team-dot" style="background:${teamColor(team)};">${teamIconHtml(team)}</span>${team.name}</h2>
       <div class="sticky-table-wrap">
         <table class="sticky-table">
-          <thead><tr><th>選手名</th>${team.members.map(p => `<th>${p.name}</th>`).join('')}</tr></thead>
+          <thead><tr><th>選手名</th>${team.members.map(p => `<th><a class="player-link" href="player.html?id=${p.id}">${p.name}</a></th>`).join('')}</tr></thead>
           <tbody>
             <tr><th>試合数</th>${team.members.map(p => `<td>${p.games}</td>`).join('')}</tr>
             <tr><th>ポイント</th>${team.members.map(p => `<td>${fmtPt(p.pt)}</td>`).join('')}</tr>
             <tr><th>平均順位</th>${team.members.map(p => `<td>${p.avgRank.toFixed(2)}</td>`).join('')}</tr>
             <tr><th>トップ率</th>${team.members.map(p => `<td>${(p.topRate * 100).toFixed(0)}%</td>`).join('')}</tr>
+            <tr><th>放銃率</th>${team.members.map(p => `<td>${(p.houjuRate * 100).toFixed(1)}%</td>`).join('')}</tr>
+            <tr><th>平均打点</th>${team.members.map(p => `<td>${Math.round(p.avgWinValue).toLocaleString()}</td>`).join('')}</tr>
           </tbody>
         </table>
       </div>
