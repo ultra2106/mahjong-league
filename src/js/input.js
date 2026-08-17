@@ -5,8 +5,10 @@ let scores = [];          // 現在の素点（seat順）
 let hands = [];           // 記録済みの局一覧
 let dealerSeat = 0;       // 現在の親のseat番号
 
+// init()関数を以下に差し替え
 async function init() {
   players = await getPlayers();
+  teams = await getTeams(); // ← 追加
   config = await fetch('config/league.config.json').then(r => r.json());
 
   renderPlayerSelectRows();
@@ -18,6 +20,38 @@ async function init() {
 
   document.getElementById('tsumo-winner').addEventListener('change', updateTsumoFieldVisibility);
   document.getElementById('tsumo-child-amount').addEventListener('input', autoFillParentAmount);
+}
+
+// renderPlayerSelectRows()関数を以下に差し替え
+function renderPlayerSelectRows() {
+  const wrap = document.getElementById('player-select-rows');
+  wrap.innerHTML = '';
+
+  // チームごとにグループ化したoptionを作る
+  const optionsHtml = teams.map(team => {
+    const members = players.filter(p => p.team_id === team.id);
+    if (members.length === 0) return '';
+    const label = team.name;
+    const opts = members.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    return `<optgroup label="${label}">${opts}</optgroup>`;
+  }).join('');
+
+  // どのチームにも属していない選手用
+  const unassigned = players.filter(p => !teams.some(t => t.id === p.team_id));
+  const unassignedHtml = unassigned.length > 0
+    ? `<optgroup label="未所属">${unassigned.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}</optgroup>`
+    : '';
+
+  for (let i = 0; i < 4; i++) {
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <label>対局者${i + 1}</label>
+      <select data-seat="${i}" class="setup-player-select">
+        ${optionsHtml}${unassignedHtml}
+      </select>
+    `;
+    wrap.appendChild(div);
+  }
 }
 
 function renderPlayerSelectRows() {
