@@ -6,22 +6,86 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <h1>対局結果入力</h1>
-  <p><a href="index.html">← ホームに戻る</a></p>
+  <div class="top-nav">
+    <p>IN-HOUSE MAHJONG LEAGUE</p>
+  </div>
 
-  <form id="game-form">
-    <label>対局日</label>
-    <input type="date" id="date" required>
+  <div class="page-wrap">
+    <h1>対局結果入力</h1>
+    <p class="nav-links"><a href="index.html">← ホームに戻る</a></p>
 
-    <label>局番号</label>
-    <input type="number" id="round_no" value="1" required>
+    <!-- STEP1: 基本情報＆対局者選択 -->
+    <form id="setup-form">
+      <label>対局日</label>
+      <input type="date" id="date" required>
 
-    <div id="player-rows"></div>
+      <label>第◯回戦</label>
+      <input type="number" id="round_no" value="1" required>
 
-    <button type="submit" class="primary">結果を登録</button>
-  </form>
+      <div id="player-select-rows"></div>
 
-  <p id="result-message"></p>
+      <button type="submit" class="primary">この対局者で開始する</button>
+    </form>
+
+    <!-- STEP2: 局の記録（対局者確定後に表示） -->
+    <div id="hand-section" style="display:none;">
+
+      <h2>現在の素点</h2>
+      <div class="card" id="score-board"></div>
+
+      <h2>局を記録する</h2>
+      <form id="hand-form" class="card">
+        <label>この局の親</label>
+        <select id="dealer-select"></select>
+
+        <label>種類</label>
+        <select id="hand-type">
+          <option value="ron">ロン</option>
+          <option value="tsumo">ツモ</option>
+          <option value="draw">流局</option>
+        </select>
+
+        <div id="ron-fields">
+          <label>放銃者</label>
+          <select id="ron-loser"></select>
+          <label>和了者</label>
+          <select id="ron-winner"></select>
+          <label>点数</label>
+          <input type="number" id="ron-amount" placeholder="例: 8000">
+        </div>
+
+        <div id="tsumo-fields" style="display:none;">
+          <label>和了者</label>
+          <select id="tsumo-winner"></select>
+
+          <!-- 親のツモ：全員同額 -->
+          <div id="tsumo-dealer-win">
+            <p style="font-size:12px; color:var(--text-secondary);">親のツモです。子3人が同額を支払います。</p>
+            <label>1人あたりの支払い</label>
+            <input type="number" id="tsumo-dealer-amount" placeholder="例: 4000">
+          </div>
+
+          <!-- 子のツモ：親は子の2倍 -->
+          <div id="tsumo-child-win" style="display:none;">
+            <p style="font-size:12px; color:var(--text-secondary);">子のツモです。親は子の2倍を支払います。</p>
+            <label>子の支払い（1人分）</label>
+            <input type="number" id="tsumo-child-amount" placeholder="例: 2000">
+            <label>親の支払い（自動で2倍。手動修正も可）</label>
+            <input type="number" id="tsumo-parent-amount" placeholder="例: 4000">
+          </div>
+        </div>
+
+        <button type="button" id="add-hand-btn" class="primary">この局を追加</button>
+      </form>
+
+      <h2>記録済みの局</h2>
+      <div id="hand-list"></div>
+
+      <button type="button" id="finish-btn" class="primary" style="margin-top:1rem;">この半荘を確定して登録</button>
+    </div>
+
+    <p id="result-message"></p>
+  </div>
 
   <script src="js/api.js"></script>
   <script src="js/input.js"></script>
