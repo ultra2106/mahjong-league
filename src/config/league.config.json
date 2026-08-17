@@ -1,5 +1,6 @@
 {
   "leagueName": "SM麻雀リーグ",
+  "startScore": 25000,
   "uma": [10, 5, -5, -10],
   "oka": 0,
   "seasonStart": "2026-09-01"
