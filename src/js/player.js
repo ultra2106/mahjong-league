@@ -5,6 +5,12 @@ function fmtPt(pt) {
   return `<span class="${cls}">${text}</span>`;
 }
 
+function fmtDateLabel(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
 async function init() {
   const params = new URLSearchParams(window.location.search);
   const playerId = params.get('id');
@@ -68,7 +74,7 @@ async function init() {
       .join(' / ');
 
     return `<div class="card" style="padding:0.75rem 1rem;">
-      <p style="font-size:12px; color:var(--text-muted); margin:0 0 4px;">${g.date}　第${g.round_no}回戦</p>
+      <p style="font-size:12px; color:var(--text-muted); margin:0 0 4px;">${fmtDateLabel(g.date)}　第${g.round_no}回戦</p>
       <p style="margin:0 0 4px; font-weight:600;">${mySeatInfo.rank}着　${fmtPt(mySeatInfo.point)}</p>
       <p style="margin:0; font-size:12px; color:var(--text-secondary);">${others}</p>
     </div>`;
