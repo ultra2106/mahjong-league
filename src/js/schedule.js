@@ -4,12 +4,18 @@ function fmtPt(pt) {
   return `<span class="${cls}">${text}</span>`;
 }
 
+function fmtDateLabel(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
 async function init() {
   const games = await getGames();
   const players = await getPlayers();
   const playerMap = Object.fromEntries(players.map(p => [p.id, p.name]));
 
-  // 日付ごとにグループ化
+  // 日付ごとにグループ化（グループ分けは元の日付、表示は整形後の日付）
   const byDate = {};
   games.forEach(g => {
     if (!byDate[g.date]) byDate[g.date] = [];
@@ -29,7 +35,7 @@ async function init() {
         ${rows}
       </div>`;
     }).join('');
-    return `<h2>${date}</h2>${cards}`;
+    return `<h2>${fmtDateLabel(date)}</h2>${cards}`;
   }).join('');
 }
 
