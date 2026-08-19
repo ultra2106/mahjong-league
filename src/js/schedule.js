@@ -15,7 +15,6 @@ async function init() {
   const players = await getPlayers();
   const playerMap = Object.fromEntries(players.map(p => [p.id, p.name]));
 
-  // 日付ごとにグループ化（グループ分けは元の日付、表示は整形後の日付）
   const byDate = {};
   games.forEach(g => {
     if (!byDate[g.date]) byDate[g.date] = [];
@@ -23,19 +22,33 @@ async function init() {
   });
 
   const wrap = document.getElementById('day-list');
+
+  if (games.length === 0) {
+    wrap.innerHTML = '<p style="color:var(--text-muted);">まだ対局結果がありません</p>';
+    return;
+  }
+
   wrap.innerHTML = Object.entries(byDate).map(([date, dayGames]) => {
-    const cards = dayGames.map(g => {
+    const matchCards = dayGames.map(g => {
       const rows = [1, 2, 3, 4].map(i => {
         const name = playerMap[g['player' + i + '_id']] || '不明';
         const pt = g['point' + i];
-        return `<div>${g['rank' + i]}着 ${name} ${fmtPt(pt)}</div>`;
+        return `<div class="match-row">
+          <span class="rank">${g['rank' + i]}着</span>
+          <span class="name">${name}</span>
+          ${fmtPt(pt)}
+        </div>`;
       }).join('');
-      return `<div style="border:1px solid var(--border); border-radius:8px; padding:10px; margin-bottom:8px;">
-        <p style="color:var(--text-muted); font-size:12px;">第${g.round_no}局</p>
+      return `<div class="match-card">
+        <p class="round-label">第${g.round_no}回戦</p>
         ${rows}
       </div>`;
     }).join('');
-    return `<h2>${fmtDateLabel(date)}</h2>${cards}`;
+
+    return `<div class="day-section">
+      <h2>${fmtDateLabel(date)}</h2>
+      <div class="match-grid">${matchCards}</div>
+    </div>`;
   }).join('');
 }
 
