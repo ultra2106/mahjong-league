@@ -48,6 +48,13 @@ function fmtPt(pt) {
   return `<span class="${cls}">${text}</span>`;
 }
 
+// 日付を「8/7」のような読みやすい表記に変換
+function fmtDateLabel(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
 function teamColor(team) {
   return team.color && team.color.trim() !== '' ? team.color : '#2f9e44';
 }
@@ -192,19 +199,16 @@ async function renderTeam(standings, content) {
   await renderTrendChart(standings.teams);
 }
 
-// 対局データから「対局日ごとのチーム累積ポイント」を計算してグラフを描く
 async function renderTrendChart(teams) {
   const games = await getGames();
   const players = await getPlayers();
 
   const playerTeamMap = Object.fromEntries(players.map(p => [p.id, p.team_id]));
 
-  // 対局日でソート
   const sortedGames = [...games].sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  // 日付ごとの各チームのポイント増減を集計
   const dateSet = [];
-  const teamPointsByDate = {}; // { date: { teamId: 増減pt } }
+  const teamPointsByDate = {};
 
   sortedGames.forEach(g => {
     const date = g.date;
@@ -222,8 +226,8 @@ async function renderTrendChart(teams) {
   });
 
   const uniqueDates = [...new Set(dateSet)];
+  const labels = uniqueDates.map(fmtDateLabel); // ← ここでラベルだけ整形
 
-  // 各チームの累積推移を計算
   const datasets = teams.map(team => {
     let running = 0;
     const data = uniqueDates.map(date => {
@@ -254,7 +258,7 @@ async function renderTrendChart(teams) {
   chartInstance = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: uniqueDates,
+      labels: labels,
       datasets: datasets
     },
     options: {
