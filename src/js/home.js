@@ -1,5 +1,22 @@
 let activeTab = 'individual';
 let activeTeamFilter = -1;
+let chartInstance = null;
+
+const CACHE_KEY = 'standings_cache';
+const CACHE_TTL_MS = 30000;
+
+async function getStandingsWithCache() {
+  const cached = sessionStorage.getItem(CACHE_KEY);
+  if (cached) {
+    const { data, ts } = JSON.parse(cached);
+    if (Date.now() - ts < CACHE_TTL_MS) {
+      return data;
+    }
+  }
+  const fresh = await getStandings();
+  sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: fresh, ts: Date.now() }));
+  return fresh;
+}
 
 async function init() {
   const config = await fetch('config/league.config.json').then(r => r.json());
@@ -43,11 +60,52 @@ function teamIconHtml(team) {
   return icon.trim() !== '' ? icon : '🀄';
 }
 
+function renderSkeleton() {
+  return `
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+  `;
+}
+
+function renderSummaryCards(standings) {
+  const totalGames = standings.players.reduce((s, p) => s + p.games, 0) / 4;
+  const leader = [...standings.players].sort((a, b) => b.pt - a.pt)[0];
+
+  return `
+    <div class="summary-cards">
+      <div class="summary-card">
+        <p class="summary-label">総対局数</p>
+        <p class="summary-value">${Math.round(totalGames)}</p>
+      </div>
+      <div class="summary-card">
+        <p class="summary-label">現在の首位</p>
+        <p class="summary-value">${leader ? leader.name : '-'}</p>
+      </div>
+      <div class="summary-card">
+        <p class="summary-label">参加人数</p>
+        <p class="summary-value">${standings.players.length}</p>
+      </div>
+    </div>
+  `;
+}
+
 async function render() {
   const content = document.getElementById('content');
-  content.innerHTML = '読み込み中...';
+  const summaryWrap = document.getElementById('summary');
 
-  const standings = await getStandings();
+  const cached = sessionStorage.getItem(CACHE_KEY);
+  if (cached) {
+    const { data } = JSON.parse(cached);
+    summaryWrap.innerHTML = renderSummaryCards(data);
+    if (activeTab === 'individual') renderIndividual(data, content);
+    else renderTeam(data, content);
+  } else {
+    content.innerHTML = renderSkeleton();
+  }
+
+  const standings = await getStandingsWithCache();
+  summaryWrap.innerHTML = renderSummaryCards(standings);
 
   if (activeTab === 'individual') {
     renderIndividual(standings, content);
@@ -106,7 +164,7 @@ function renderIndividual(standings, content) {
   });
 }
 
-function renderTeam(standings, content) {
+async function renderTeam(standings, content) {
   const ranked = [...standings.teams].sort((a, b) => b.total - a.total);
 
   let html = '<div class="card"><table class="standings-table"><thead><tr><th>#</th><th>チーム</th><th>合計pt</th><th>人数</th></tr></thead><tbody>';
@@ -120,7 +178,97 @@ function renderTeam(standings, content) {
   });
   html += '</tbody></table></div>';
 
+  html += `
+    <div class="card">
+      <p style="font-size:14px; font-weight:600; margin:0 0 12px;">累積ポイント推移</p>
+      <div style="position:relative; width:100%; height:280px;">
+        <canvas id="trendChart" role="img" aria-label="チームごとの累積ポイント推移グラフ"></canvas>
+      </div>
+    </div>
+  `;
+
   content.innerHTML = html;
+
+  await renderTrendChart(standings.teams);
+}
+
+// 対局データから「対局日ごとのチーム累積ポイント」を計算してグラフを描く
+async function renderTrendChart(teams) {
+  const games = await getGames();
+  const players = await getPlayers();
+
+  const playerTeamMap = Object.fromEntries(players.map(p => [p.id, p.team_id]));
+
+  // 対局日でソート
+  const sortedGames = [...games].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  // 日付ごとの各チームのポイント増減を集計
+  const dateSet = [];
+  const teamPointsByDate = {}; // { date: { teamId: 増減pt } }
+
+  sortedGames.forEach(g => {
+    const date = g.date;
+    if (!teamPointsByDate[date]) {
+      teamPointsByDate[date] = {};
+      dateSet.push(date);
+    }
+    for (let i = 1; i <= 4; i++) {
+      const pid = g['player' + i + '_id'];
+      const pt = Number(g['point' + i]);
+      const teamId = playerTeamMap[pid];
+      if (!teamId) continue;
+      teamPointsByDate[date][teamId] = (teamPointsByDate[date][teamId] || 0) + pt;
+    }
+  });
+
+  const uniqueDates = [...new Set(dateSet)];
+
+  // 各チームの累積推移を計算
+  const datasets = teams.map(team => {
+    let running = 0;
+    const data = uniqueDates.map(date => {
+      running += teamPointsByDate[date][team.id] || 0;
+      return Math.round(running * 10) / 10;
+    });
+    return {
+      label: team.name,
+      data: data,
+      borderColor: teamColor(team),
+      backgroundColor: teamColor(team),
+      borderWidth: 2,
+      pointRadius: 3,
+      tension: 0.2
+    };
+  });
+
+  if (chartInstance) chartInstance.destroy();
+
+  const ctx = document.getElementById('trendChart');
+  if (!ctx || uniqueDates.length === 0) {
+    if (ctx) {
+      ctx.parentElement.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">まだグラフに表示できる対局データがありません</p>';
+    }
+    return;
+  }
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: uniqueDates,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+      },
+      scales: {
+        y: { grid: { color: '#e5e5e5' }, ticks: { color: '#999' } },
+        x: { grid: { display: false }, ticks: { color: '#999' } }
+      }
+    }
+  });
 }
 
 init();
