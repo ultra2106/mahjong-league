@@ -2,14 +2,21 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>試合日程</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <h1>試合日程</h1>
-  <p><a href="index.html">← ホームに戻る</a></p>
+  <div class="top-nav">
+    <p>IN-HOUSE MAHJONG LEAGUE</p>
+  </div>
 
-  <div id="day-list">読み込み中...</div>
+  <div class="page-wrap">
+    <h1>試合日程</h1>
+    <p class="nav-links"><a href="index.html">← ホームに戻る</a></p>
+
+    <div id="day-list">読み込み中...</div>
+  </div>
 
   <script src="js/api.js"></script>
   <script src="js/schedule.js"></script>
