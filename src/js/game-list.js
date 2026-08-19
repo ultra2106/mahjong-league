@@ -1,3 +1,9 @@
+function fmtDateLabel(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
 async function init() {
   await renderGameList();
 }
@@ -23,7 +29,7 @@ async function renderGameList() {
 
     return `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem;">
       <div>
-        <p style="font-size:12px; color:var(--text-muted); margin:0 0 4px;">${g.date}　第${g.round_no}回戦</p>
+        <p style="font-size:12px; color:var(--text-muted); margin:0 0 4px;">${fmtDateLabel(g.date)}　第${g.round_no}回戦</p>
         <p style="margin:0; font-size:13px;">${summary}</p>
       </div>
       <div style="display:flex; gap:8px; flex-shrink:0;">
